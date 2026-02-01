@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>For Nikku 💗</title>
+<style>
+* {
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    margin: 0;
+    height: 100vh;
+    background: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Segoe Script', cursive;
+    overflow: hidden;
+}
+
+#phone {
+    width: 100%;
+    max-width: 390px;
+    aspect-ratio: 9 / 16;
+    background: linear-gradient(180deg, #ffd6e8, #ffeef5);
+    position: relative;
+    overflow: hidden;
+}
+
+#score {
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 18px;
+    color: #ff4d6d;
+    z-index: 10;
+}
+
+.heart {
+    position: absolute;
+    font-size: 36px;
+    padding: 10px;
+    cursor: pointer;
+}
+
+.sunflower {
+    font-size: 40px;
+    filter: drop-shadow(0 0 10px gold);
+}
+
+#messageBox {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255,255,255,0.95);
+    padding: 12px 22px;
+    border-radius: 22px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    font-size: 15px;
+    color: #6d6875;
+    opacity: 0;
+    transition: opacity 0.4s;
+    max-width: 90%;
+    text-align: center;
+}
+
+#messageBox.show {
+    opacity: 1;
+}
+
+#startScreen {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, #ffb6c1, #ffeef5);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    z-index: 20;
+    padding: 20px;
+}
+
+#startScreen h1 {
+    color: #ff4d6d;
+    font-size: 30px;
+    margin-bottom: 10px;
+}
+
+#startScreen p {
+    color: #6d6875;
+    font-size: 16px;
+    margin-bottom: 15px;
+}
+
+.levels button {
+    margin: 6px;
+    padding: 10px 20px;
+    border-radius: 20px;
+    border: none;
+    background: #ff4d6d;
+    color: white;
+    font-size: 15px;
+}
+
+.startBtn {
+    margin-top: 15px;
+    padding: 14px 34px;
+    border-radius: 30px;
+    background: #ff4d6d;
+    color: white;
+    font-size: 17px;
+    border: none;
+}
+</style>
+</head>
+<body>
+
+<div id="phone">
+
+    <div id="startScreen">
+        <h1>Catch the Hearts 💗</h1>
+        <p>For Nikku 🌸<br>Select a level & play</p>
+
+        <div class="levels">
+            <button onclick="setLevel(2)">Easy 🌸</button>
+            <button onclick="setLevel(4)">Medium 💗</button>
+            <button onclick="setLevel(6)">Hard 🔥</button>
+        </div>
+
+        <button class="startBtn" onclick="startGame()">Start 💖</button>
+    </div>
+
+    <div id="score">Hearts: 0</div>
+    <div id="messageBox"></div>
+
+    <audio id="bgMusic" src="music.mp3" loop></audio>
+</div>
+
+<script>
+const phone = document.getElementById("phone");
+const scoreText = document.getElementById("score");
+const messageBox = document.getElementById("messageBox");
+const bgMusic = document.getElementById("bgMusic");
+
+let score = 0;
+let hearts = [];
+let speed = 4;
+let gameRunning = false;
+
+const messages = [
+    "You’re doing amazing 💗",
+    "This is for you 🌸",
+    "Sunflower for my sunshine 🌻",
+    "I made this with love 💕",
+    "Your smile matters 😊"
+];
+
+function setLevel(s) {
+    speed = s;
+}
+
+function startGame() {
+    document.getElementById("startScreen").style.display = "none";
+    bgMusic.play();
+    gameRunning = true;
+    requestAnimationFrame(updateHearts);
+    spawnHeart();
+}
+
+// CREATE HEART
+function spawnHeart() {
+    if (!gameRunning) return;
+
+    const heart = document.createElement("div");
+    const isSunflower = Math.random() < 0.15;
+
+    heart.className = isSunflower ? "heart sunflower" : "heart";
+    heart.innerText = isSunflower ? "🌻" : "💗";
+    heart.style.left = Math.random() * 80 + "%";
+    heart.style.top = "-50px";
+
+    phone.appendChild(heart);
+
+    heart.addEventListener("touchstart", collect, { passive: true });
+    heart.addEventListener("click", collect);
+
+    function collect() {
+        score += isSunflower ? 3 : 1;
+        scoreText.innerText = "Hearts: " + score;
+        showMessage(isSunflower);
+        heart.remove();
+        hearts = hearts.filter(h => h !== heart);
+    }
+
+    hearts.push({ el: heart, y: -50, isSunflower });
+    setTimeout(spawnHeart, 700); // spawn next heart
+}
+
+// ANIMATE HEARTS
+function updateHearts() {
+    for (let i = hearts.length - 1; i >= 0; i--) {
+        let h = hearts[i];
+        h.y += 2 + speed * 0.5; // fall speed
+        h.el.style.top = h.y + "px";
+
+        if (h.y > phone.clientHeight) {
+            h.el.remove();
+            hearts.splice(i, 1);
+        }
+    }
+    if (gameRunning) requestAnimationFrame(updateHearts);
+}
+
+// SHOW MESSAGE
+function showMessage(isSunflower) {
+    messageBox.innerText = isSunflower
+        ? "🌻 Special Sunflower! +3 Love 💛"
+        : messages[Math.floor(Math.random() * messages.length)];
+    messageBox.classList.add("show");
+    setTimeout(() => messageBox.classList.remove("show"), 1400);
+}
+</script>
+
+</body>
+</html>
